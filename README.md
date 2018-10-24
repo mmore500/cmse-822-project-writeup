@@ -1,9 +1,9 @@
-## Homework Template
+## CMSE 822 Project Writeup
 
-A LaTeX template for homework assignments.
+For parallel computing class.
 
 ### Authorship
 
 Matthew Andres Moreno
 
-`matthew.andres.moreno@gmail.com`
+`m.more500@gmail.com`
