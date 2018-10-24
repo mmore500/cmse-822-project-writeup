@@ -11,6 +11,8 @@ The major aspect of implementation we intend to explore is the level at which sy
 One one end of the spectrum, individual toroidal grid tiles might proceed in lockstep update by update, with each tile waiting for all others to complete the current update before proceeding to the next.
 On the other end of the spectrum, individual toroidal grid tiles might be allowed to proceed asynchronously with resource waves and any cell-to-cell communication proceeding as quickly (and unevenly) as network resources allow.
 Specifically, we will be interested in quantifying the distribution of ``unevenness'' of effective elapsed updates in the asynchronous implementation and whether a net increase in the effective update rate can be achieved compared to the synchronous approach.
+We will investigate these questions across a range of computational scales (e.g., on toroidal grids of different sizes). 
+
 
 In future work, we are eager to realize actual evolution with cell-like organisms capable of arbitrary computation via genetic programming in order to pursue more open-ended evolutionary experiments.
 However, that is beyond the scope of the proposed work for this course.
