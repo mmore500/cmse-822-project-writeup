@@ -1,0 +1,17 @@
+\section{Objectives}
+
+The objective of this project is to explore the implementation and performance of different approaches to scaling the DISHTINY model with MPI.
+In our implementation, each toroidal grid tile would correspond to a MPI process.
+For tractability, we intend to work with ``a model of the model'' (e.g., placeholder computations and messages designed to resemble the computational activity and messaging patterns of our system without actually implementing the content of those computations and messages) instead of the full DISHTINY model.
+At the most granular level, such a ``model of the model'' would only track resource wave propagation across the toroidal grid and would neglect agents.
+Next, we would proceed to introduce aspects of agents into the model: transfers of a null genome between grid tiles based on reproduction (e.g., reproduction), channel tracking (with random decisions made with respect to channel inheritance during reproduction), and arbitrary cell-to-cell signaling (e.g., null short messages passed between toroidal grid tiles).
+Along the way, we will collect data to verify that the ``model of the model'' behaves as intended (e.g., verify correctness of implementation).
+
+The major aspect of implementation we intend to explore is the level at which synchrony is enforced.
+One one end of the spectrum, individual toroidal grid tiles might proceed in lockstep update by update, with each tile waiting for all others to complete the current update before proceeding to the next.
+On the other end of the spectrum, individual toroidal grid tiles might be allowed to proceed asynchronously with resource waves and any cell-to-cell communication proceeding as quickly (and unevenly) as network resources allow.
+Specifically, we will be interested in quantifying the distribution of ``unevenness'' of effective elapsed updates in the asynchronous implementation and whether a net increase in the effective update rate can be achieved compared to the synchronous approach.
+
+In future work, we are eager to realize actual evolution with cell-like organisms capable of arbitrary computation via genetic programming in order to pursue more open-ended evolutionary experiments.
+However, that is beyond the scope of the proposed work for this course.
+We do hope that this project will yield a code base that provides a direct jumping off point for such future endeavors.
