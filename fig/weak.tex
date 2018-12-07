@@ -1,0 +1,24 @@
+
+\begin{figure}
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\textwidth]{img/MPIWeak}
+\caption{
+MPI implementation time to solution versus parallelism for problem size proportional to CPU count (262,144 grid tiles per CPU).
+Dashed line indicates the ideal scaling relationship.
+Shaded area represents standard deviation of five replications for each observation.
+}
+\label{fig:mpi_weak}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\textwidth}
+  \includegraphics[width=\textwidth]{img/CharmWeak}
+\caption{
+Charm++ implementation time to solution versus parallelism for problem size proportional to CPU count (1 grid tile per CPU).
+Dashed line indicates the ideal scaling relationship.
+Shaded area represents standard deviation of five replications for each observation.
+}
+\label{fig:charm_weak}
+\end{subfigure}
+\caption{
+Analogy between (\subref{fig:mpi_weak}) natural and (\subref{fig:charm_weak}) simulated hierarchical fraternal transitions of individuality.
+}
+\end{figure}
