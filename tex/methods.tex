@@ -76,7 +76,7 @@ The naive input/output methodology used in our Charm++ implementation does not i
 If we were going to run the Charm++ code in production, however, more sophisticated I/O routines would be in order.
 A common Charm++ idiom appears to be use of built-in, optimized reductions to bring data in to a single I/O Chare, which then handles writing data to file.
 
-\subsection{Compute Environment}
+\subsection{Compute Environment} \label{sec:compute}
 
 Performance experiments were performed on the Michigan State University High Performance Computing Center.
 Computing resources were requested using the following command: \texttt{salloc -n 256 --time=2:00:00}.

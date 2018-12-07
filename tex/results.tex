@@ -4,9 +4,18 @@
 
 \input{fig/weak.tex}
 
+
+As discussed in \label{sec:compute},
+\textit{weak scaling:} both implementations take a performance hit moving from single- to multi-node
+
+
 \subsection{Strong Scaling}
 
 \input{fig/strong.tex}
+
+
+\textit{Charm++ strong scaling:} poor performance when Chares overload available CPUs
+\textit{MPI strong scaling:} near-ideal only down to a grid chunk size of around $256\times256$, perhaps due to breakdown of latency hiding
 
 \subsection{Strong Scaling}
 
@@ -15,3 +24,31 @@
 \subsection{Verification}
 
 \input{fig/correctness.tex}
+
+As with other endeavors in the field of Artificial Life \cite{bedau2000open}, our goal is to design and study an abstract system that experiences a phenomenon of interest rather than to directly model a specific (biological) system.
+Because our the aim is ultimately generative instead of strictly emulative, our criteria for correctness isn't necessarily as strictly defined as that for other scientific software.
+
+Although ideally avoided for reproducibility's sake, our objective is not incompatible with nondeterminism introduced by race conditions.
+(In fact, demonstrating robustness to asynchrony and hardware hiccups/failure is perhaps useful for arguing that our approach is compatible with extreme computational scaling \cite{ackley2016indefinite}.)
+At a fundamental level, our asynchronous Charm++ implementation is sensitive to hardware stochasticity (e.g., what order Charm++ messages are received and queued in).
+
+Here are our criteria for correctness:
+\begin{enumerate}
+\item medium-sized same-channel groups accumulate resource at a greater rate than small and too-large same-channel groups, and
+\item for the MPI implementation, our simulation yields exactly the same results on any number of processors.
+\end{enumerate}
+
+I verified the implementations by loading a manually-designed $24 \times 24$ channel layout and then inspecting resource accumulations at the end of a 150 second run.
+The channel layout was designed with a general left-to-right gradient of same-channel group size, with a few same-channel groups wrapped around the toroidal edges.
+Figure \ref{fig:correctness} shows resource accumulation results mapped over outlines of same-channel groups for the Charm++ implementation, for the MPI implementation with $n=1$, and for the MPI implementation with $n=4$.
+See the figure caption for details on same-channel groups wrapped around the toroidal edges.
+
+For these runs, a resource wave size of three units was used.
+That means that any tile that is more than three grid steps away from another tile in its same-channel signaling group should experience negative resource accumulation.
+The Charm++ implementation appears entirely correct: much-too-large cell groups exhibit completely negative resource accumulation, slightly-too-large cell groups exhibit negative resource accumulation at the periphery, and medium/small cell groups exhibit positive resource accumulation.
+The MPI implementations are not entirely correct.
+In the $n=1$ case, we don't have negative resource accumulation in the too-large top-to-bottom-wrapped same-channel group.
+In the $n=4$ case, we have several sites at the interior of slightly-too-large cell groups where negative resource accumulation occurs where we would have expected positive resource accumulation and vice-versa.
+
+The MPI implementation needs more debugging for correctness before it would be ready for research use.
+However, the implementation suffices for meaningful performance profiling, which is the primary objective of the project at this stage.
