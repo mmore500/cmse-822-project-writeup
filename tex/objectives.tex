@@ -1,6 +1,6 @@
 \section{Objectives}
 
-The objective of this project is to explore the implementation and performance of different approaches to scaling the DISHTINY model with MPI and Charm++.
+The objective of this project is to explore the implementation and performance of different approaches to scaling the DISHTINY model with MPI and Charm++ \cite{kale1993charm, Forum:1994:MMI:898758}.
 In our implementation, each toroidal grid tile would correspond to a MPI rank or a Charm chare.
 For tractability, we intend to work with ``a model of the model'' (e.g., placeholder computations and messages designed to resemble the computational activity and messaging patterns of our system without actually implementing the content of those computations and messages) instead of the full DISHTINY model.
 At the most granular level, such a ``model of the model'' would only track resource wave propagation across the toroidal grid and would neglect agents.
