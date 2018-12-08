@@ -1,6 +1,6 @@
 \section{Objectives}
 
-The objective of this project is to compare  the DISHTINY model with MPI and Charm++.
+The objective of this project is to compare the parallel performance of alternate frameworks for the DISHTINY model: MPI and Charm++.
 
 Charm++ requires the user to abstract their computation across of a set of Chare objects, written much like C++ objects.
 Chare objects, written much like C++ objects, interact by calling each other's invocation methods.
@@ -8,8 +8,9 @@ These calls return immediately and, under the hood, the arguments to the call ar
 These objects are adaptively scheduled across available computational resources by Charm++'s runtime system.
 Charm++ is developed and maintained by the Parallel Programming Laboratory at the University of Illinois \cite{kale1993charm+}.
 
-In contast, MPI is a standard that defines syntax and semantics for the building blocks of parallel programs \cite{Forum:1994:MMI:898758}.
+MPI defines syntax and semantics for the building blocks of parallel programs \cite{Forum:1994:MMI:898758}.
 MPI executes the same code across many processors, with instances communicating through message-passing or remote memory access.
+Unlike Charm++, explicit decisions about precisely how MPI ranks will run and interact must be made by the programmer before compile time.
 MPI is a well-established standard with several mature implementations.
 
 Comparing Charm++ with MPI allows exploration of the performance and behavior of synchronous versus asynchronous approaches to parallelizing DISHTNINY.

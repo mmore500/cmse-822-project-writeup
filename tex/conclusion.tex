@@ -1,11 +1,22 @@
 \section{Conclusion}
 
-Charm++ 
-Message-driven paradigm would align nicely with existing software in our lab group designed for event-driven evolutionary computation \cite{lalejini2018evolving}.
+The goal of this project is to compare asynchronous and synchronous approaches to parallelizing digital evolution experiments on fraternal transitions of individuality.
+The asynchronous approach was implemented with with Charm++ and the synchronous approach was implemented with MPI.
 
-However, this project seems to clearly indicate that MPI is the better path forward.
+Charm++ provides an appealing message-driven paradigm would align nicely with existing software in our lab group designed for event-driven evolutionary computation \cite{lalejini2018evolving}.
+Exploiting Charm++'s object-oriented framework and simple method invocation to message syntax would allow for intuitive and rapid re-use of this existing software.
+
+On the grounds of performance, though, MPI proves the better choice.
+The strong scaling of our MPI implementation is much closer to ideal than that of Charm++ implementation, particularly as the first 64 CPUs were added.
+In addition, although MPI implementation took a performance hit moving from single-node to multi-node execution, the near-identical times to solution when run on 64 and 256 cores in our weak scaling study suggests that we might be able to perform further scaling past 256 processors efficiently.
+
+In addition, MPI allows for more explicit control of important aspects of parallel programming.
+For example, MPI allows the programmer to specify that ranks interact in a grid topology so that the placement.
+No such control is possible in Charm++; the programmer must instead rely upon the adaptive runtime system to pick up on communication patterns and migrage Chares appropriately
+Working with MPI will allow us to much more tightly fine-tune our software.
 It's faster and allows better control.
-Because MPI is much more ubiquitous than Charm++, it also benefits from better support and integration with other software, such as parallel I/O with HDF5.
-Heavy-weight dependency.
 
-Although Charm++ offers an appealing object-oriented and message-driven conceptual framework, MPI is the obvious choice.
+Finally, because MPI is much more ubiquitous than Charm++ it benefits from better support and integration with other software, such as parallel I/O with HDF5 or checkpoint-restart with DMCTP.
+
+Although Charm++ offers an appealing object-oriented and event-driven software development framework, MPI is the obvious choice moving forward.
+We hope that exploiting parallel computing power will allow us to perform much larger-scale evolutionary transitions of individuality experiments in order to better understand these important evolutionary events.
