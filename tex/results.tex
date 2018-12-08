@@ -4,22 +4,29 @@
 
 \input{fig/weak.tex}
 
-
-As discussed in \label{sec:compute},
-\textit{weak scaling:} both implementations take a performance hit moving from single- to multi-node
-
+Figure \ref{fig:weak} shows the relationship between time-to-solution and parallelism with problem size growing proportionally to parallelism for both the MPI and Charm++ implementations.
+Ideally, time-to-solution would remain unchanged as more work and more processors are added.
+However, both implementations experience a large performance hit scaling through the range of about 4 to 64 processors.
+As discussed in \label{sec:compute}, the HPCC allocated a compute environment with about 12 processors per node.
+Thus, this large performance hit to both implementations is probably due to greater communication costs for communication between nodes.
+Encouragingly, though, both implementations (but especially MPI) see a less severe reduction in performance scaling from 64 to 256 nodes, suggesting that scaling up further to even more nodes could be accomplished efficiently.
 
 \subsection{Strong Scaling}
 
 \input{fig/strong.tex}
 
+Figure \ref{fig:strong} shows the relationship between time-to-solution and parallelism with a fixed problem size for both the MPI and Charm++ implementations.
 
-\textit{Charm++ strong scaling:} poor performance when Chares overload available CPUs
-\textit{MPI strong scaling:} near-ideal only down to a grid chunk size of around $256\times256$, perhaps due to breakdown of latency hiding
+At an overall grid size of $2048 \times 2048$ MPI scales near-ideally up to 64 processors before speedup levels off.
+At 256 processors, sub-grid size has decreased to $256\times256$.
+The performance saturation at 64 processors is perhaps due to a breakdown of latency hiding: at that smaller sub-grid size there isn't enough work for each rank to do while waiting for communications to complete.
 
-\subsection{Strong Scaling}
+Our Charm++ strong-scaling study employed a grid size of $16 \times 16$ (256 tiles total).
+Compared to the single-processor time-to-solution, Charm++ exhibits no increase in performance as the first 16 processors are added.
+Then, as more processors are added time-to-solution begins to decline at a near-ideal rate.
+At low processor counts, many Chare objects share the same CPU.
+The lack of speedup at low processor counts might be due to Charm++ overhead involved with to schedule and un-scheduling many Chares on the same CPU.
 
-\subsection{Memory Usage}
 
 \subsection{Verification}
 

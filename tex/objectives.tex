@@ -1,21 +1,23 @@
 \section{Objectives}
 
-The objective of this project is to explore the implementation and performance of different approaches to scaling the DISHTINY model with MPI and Charm++ \cite{kale1993charm++, Forum:1994:MMI:898758}.
-In our implementation, each toroidal grid tile would correspond to a MPI rank or a Charm chare.
-For tractability, we intend to work with ``a model of the model'' (e.g., placeholder computations and messages designed to resemble the computational activity and messaging patterns of our system without actually implementing the content of those computations and messages) instead of the full DISHTINY model.
-At the most granular level, such a ``model of the model'' would only track resource wave propagation across the toroidal grid and would neglect agents.
-Next, we would proceed to introduce aspects of agents into the model: transfers of a null genome between grid tiles based on reproduction (e.g., reproduction), channel tracking (with random decisions made with respect to channel inheritance during reproduction), and arbitrary cell-to-cell signaling (e.g., null short messages passed between toroidal grid tiles).
-Along the way, we will collect data to verify that the ``model of the model'' behaves as intended (e.g., verify correctness of implementation).
+The objective of this project is to compare  the DISHTINY model with MPI and Charm++.
 
-The major aspect of implementation we intend to explore is synchrony versus asynchrony.
+Charm++ requires the user to abstract their computation across of a set of Chare objects, written much like C++ objects.
+Chare objects, written much like C++ objects, interact by calling each other's invocation methods.
+These calls return immediately and, under the hood, the arguments to the call are wrapped into a message and then delivered to the Chare object.
+These objects are adaptively scheduled across available computational resources by Charm++'s runtime system.
+Charm++ is developed and maintained by the Parallel Programming Laboratory at the University of Illinois \cite{kale1993charm+}.
+
+In contast, MPI is a standard that defines syntax and semantics for the building blocks of parallel programs \cite{Forum:1994:MMI:898758}.
+MPI executes the same code across many processors, with instances communicating through message-passing or remote memory access.
+MPI is a well-established standard with several mature implementations.
+
+Comparing Charm++ with MPI allows exploration of the performance and behavior of synchronous versus asynchronous approaches to parallelizing DISHTNINY.
 One one end of the spectrum, individual toroidal grid tiles might proceed in lockstep update by update, with each tile waiting for all others to complete the current update before proceeding to the next.
-We will implement this synchronous approach with MPI.
-On the other end of the spectrum, individual toroidal grid tiles might be allowed to proceed asynchronously with resource waves and any cell-to-cell communication proceeding as quickly (and unevenly) as network resources allow.
-We will implement this asynchronous approach with Charm++.
+We implement this synchronous approach with MPI.
+On the other end of the spectrum, individual toroidal grid tiles might be allowed to proceed asynchronously with resource waves with any cell-to-cell communication proceeding as quickly (and potentially unevenly) as runtime conditions allow.
+We implement this asynchronous approach with Charm++.
 
-With the asynchronous approach, we will be interested in quantifying the distribution of ``unevenness'' of effective elapsed updates between chares and whether a net increase in the effective update rate can be achieved compared to the synchronous approach.
-We will investigate these questions across a range of computational scales (e.g., on toroidal grids of different sizes).
-
+For tractability, this work uses a stripped-down version of the DISHTINY model, simulating only resource-wave events and resource accumulation.
 In future work, we are eager to realize actual evolution with cell-like organisms capable of arbitrary computation via genetic programming in order to pursue more open-ended evolutionary experiments \cite{lalejini2018evolving}.
-However, that is beyond the scope of the proposed work for this course.
-We do hope that this project will yield a code base that provides a direct jumping off point for such future endeavors.
+Our scaling study will point the way forward for future development of parallel DISHTINY and the implementations put together for the project will provide a jumping-off point for that development.

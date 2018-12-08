@@ -37,6 +37,15 @@ Then, at the end of a run, each process writes its own resource accumulation val
 This input/output scheme eliminates a potential bottleneck among MPI ranks at output time.
 Instead of having to take turns writing out data one at-a-time --- or storing potentially large amounts of data in the memory of a single rank via a reduction, which would then have to be written out serially by that rank --- all ranks can simply dump their data to directly to disk at will.
 
+\subsubsection{Memory Usage}
+
+MPI's distributed memory model allows the total amount of available memory to scale with rank count (e.g., as more nodes are added, more memory becomes available).
+So long as sub-grid size is kept constant (e.g., more ranks are added as problem size increases), the memory requirements of each rank will not increase as problem size increases.
+Additionally, because each sub-grid only communicates with a fixed number of neighbors (instead of communicating with all sub-grids), the memory required for communication overhead should scale in lockstep with available distributed memory as problem size increases and more ranks are added.
+
+For the largest grids we tested with $(8192 \times 8192)$, the channel configuration file was hundreds of megabytes large.
+Scaling even larger, simply reading channel configuration into memory or writing out resource accumulations for the entire grid might become intractable without parallel and distributed I/O.
+
 \subsection{Charm++ Implementation}
 
 \subsubsection{Work Division}
@@ -75,6 +84,18 @@ Unfortunately, this output scheme was incompatible with the round-robin update i
 The naive input/output methodology used in our Charm++ implementation does not impact performance profiling because input/output and initialization time was not measured.
 If we were going to run the Charm++ code in production, however, more sophisticated I/O routines would be in order.
 A common Charm++ idiom appears to be use of built-in, optimized reductions to bring data in to a single I/O Chare, which then handles writing data to file.
+
+\subsubsection{Memory Usage}
+
+Using Charm++ Chares to represent individual grid tiles might lead to excessive memory use when simulating a large grid on a small number of CPUs.
+As grid size increases, the memory overhead associated with Charm++'s Chare book-keeping and queued messages between Chares increases in lockstep.
+
+Charm++ employs a distributed memory model with individual Chares farmed out across nodes, so increasing the node count in tandem with increases in problem size should allow more grid tiles (and corresponding Chare objects) to be simulated without increasing the memory load on any individual node.
+However, the common Charm++ practice of piping I/O through a single Chare might prove problematic for large problem sizes if the amount of data that needs to be handled exceeds the memory available on a single node.
+
+An additional memory issue that can arise with Charm++ is accumulation of un-processed messages.
+For example, if the self-update messages (which generate resource-wave signal messages and then generate another self-update message) are consistently prioritized in the queue over resource-wave signal messages, a growing backlog of resource-wave signal messages will bloat memory and eventually crash the run.
+Prioritizing resource-wave signal messages over self-update messages mitigates this issue.
 
 \subsection{Compute Environment} \label{sec:compute}
 
