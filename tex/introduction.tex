@@ -1,4 +1,10 @@
-\section{Model}
+\section{Introduction}
+
+Artificial life researchers design systems that exhibit properties of biological life in order to better understand their dynamics and, often, to apply these principles toward engineering applications such as artificial intelligence \cite{bedau2003artificial}.
+Evolutionary transitions in individuality, which are key to the complexification and diversification of biological life \cite{smith1997major}, have been highlighted as key research targets with respect to the question of open-ended evolution \cite{ray1996evolving, banzhaf2016defining}.
+In an evolutionary transition of individuality, a new, more complex replicating entity is derived from the combination of cooperating replicating entities that have irrevocably entwined their long-term fates \cite{west2015major}.
+In particular, we focus on fraternal transition in individuality, events where closely-related kin come together or stay together to form a higher-level organism \cite{queller1997cooperators}.
+Eusocial insect colonies and multicellular organisms exemplify this phenomenon \cite{smith1997major}.
 
 \input{fig/explanatory.tex}
 
@@ -6,7 +12,7 @@ In previous work \cite{moreno2018toward}, we introduced the DISHTINY (DIStribute
 Detection of such a transition in DISHTINY is accomplished by identifying resource-sharing and reproductive division of labor among organisms registered to the same cooperating group.
 We designed this system such that hierarchal transitions across an arbitrary number of levels of individuality can be selected for and meaningfully detected.
 Furthermore, DISHTINY is decentralized and amenable to massive parallelization via distributed computing.
-We believe that such scalability --- with respect to both concept and implementation --- is an essential consideration in the pursuit of artificial systems capable of generating complexity and novelty rivaling that of biological life via open-ended evolution \cite{ackley2011pursue, ackley2016indefinite}.
+We believe that such scalability is an essential consideration in the pursuit of artificial systems capable of generating complexity and novelty rivaling that of biological life via open-ended evolution \cite{ackley2011pursue, ackley2016indefinite}.
 
 DISHTINY allows cell-like organisms to replicate across a toroidal grid.
 Over discrete timesteps (``updates''), the cells can collect a continuous-valued resource.
@@ -41,15 +47,6 @@ Cells control the size and shape of their same-channel signaling group through s
 Three choices are afforded: whether to reproduce at all, where among the four adjoining tiles of the toroidal grid to place their offspring, and whether the offspring should be registered to the parent's signaling channel or be given a random channel ID (in the range 1 to $2^{22}$).
 No guarantees are made about the uniqueness of a newly-generated channel ID, but chance collisions are rare.
 
-Channel IDs enable straightforward detection of an evolutionary transition in individuality.
-Because common channel IDs may only arise systematically through inheritance, common channel IDs indicate a close hereditary relationship in addition to a close cooperative relationship.
-Because new channel IDs arise first in a single cell, same-channel signaling networks are reproductively bottlenecked, ensuring meaningful reproductive lineages at the level of the same-channel signaling network.
-To recognize an evolutionary transition in individuality, we therefore evaluate
-\begin{enumerate}
-\item Do cells with the same channel ID choose to share resources (e.g., cooperate)?
-\item Is there division of reproductive labor between members of the same channel (e.g., do cells at the interior of a network cede reproduction to those at the periphery?)
-\end{enumerate}
-
 In previous work \cite{moreno2018toward}, we used simple organisms that evolve parameters for a set of manually-designed strategies, to demonstrate that DISHTINY selects for genotypes that exhibit high-level individuality.
 Specifically, we observed
 \begin{enumerate}
@@ -58,8 +55,6 @@ Specifically, we observed
   \item reproductive bottlenecking (i.e., groups of cells sharing a channel ID descend from a single originator of that channel ID), and
   \item suppression of somatic mutation via apoptosis coincident with high-level individuality.
 \end{enumerate}
-
-The code used to perform and analyze our experiments, our figures, data from our experiments, and a live in-browser demo of our system is available via the Open Science Framework at \url{https://osf.io/ewvg8/}.
 
 We believe scale is fundamental to pursuing open-ended evolution in Artificial life.
 The DISHTINY model trivially scales to select for an arbitrary number of hierarchical levels of individuality through multiple separate, but overlaid, instantiations of this resource wave/channel-signaling scheme.

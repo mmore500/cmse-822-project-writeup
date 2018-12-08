@@ -1,0 +1,113 @@
+\section{Methods}
+
+\subsection{MPI Implementation}
+
+\subsubsection{Work Division}
+
+The MPI implementation chunks the tile grid into a set of distinct sub-grids, each of which is assigned to a single MPI ranks.
+Ranks are assigned to grid chunks using the built-in grid topology API, which helps to assure efficient distribution of neighboring ranks across the hardware topology.
+
+Inside the update loop, each rank
+\begin{enumerate}
+\item initializes asynchronous send and receive calls to exchange information on current peripheral channel ID and resource wave activation states with neighboring ranks (e.g., \texttt{MPI_Isend} and \texttt{MPI_Irecv}),
+\item updates the resource wave states of the interior of its sub-grid,
+\item waits on all asynchronous receives to complete,
+\item updates wave states of the periphery of its sub-grid, and
+\item waits on all asynchronous sends to complete.
+\end{enumerate}
+
+This ordering of operations allows for latency hiding: communication occurs asynchronously during the time when each rank is updating the resource wave states for the interior of its sub-grid.
+The, ideally, when each rank needs input from its neighbors (i.e., to update its periphery) that information is already ready and waiting.
+
+Grid chunks are exactly uniform in size.
+(For simplicity of implementation, only grid sizes and rank counts that divide up evenly are allowed.)
+In this bare-bones implementation, channel IDs do not change at runtime.
+Channel configurations loaded from file contained uniformly-sized same-channel groups over the entire grid.
+The uniformity of channel configuration across the grid assures that the amount of computation needed to update each sub-grid is approximately equal.
+Each rank handles one sub-grid, so work should be uniform across ranks (i.e., load-balanced).
+However, in future work where channel configurations could become uneven during run-time, load balancing might become an challenge.
+For example, a channel configuration where much larger resource waves are possible might require slightly more compute time to update than a channel configuration with small same-channel groups.
+So, in this case, some ranks with faster channel configurations might regularly idle while waiting for ranks with slower channel configurations to update.
+
+\subsubsection{Input/Output}
+
+The MPI implementation exploits parallel HDF5 for input and output.
+Each process reads in its channel configuration from a HDF5 file containing the global channel configuration.
+Then, at the end of a run, each process writes its own resource accumulation values out to it's particular region of a HDF5 datafile (e.g., using \texttt{H5Pset_fapl_mpio}).
+This input/output scheme eliminates a potential bottleneck among MPI ranks at output time.
+Instead of having to take turns writing out data one at-a-time --- or storing potentially large amounts of data in the memory of a single rank via a reduction, which would then have to be written out serially by that rank --- all ranks can simply dump their data to directly to disk at will.
+
+\subsubsection{Memory Usage}
+
+MPI's distributed memory model allows the total amount of available memory to scale with rank count (e.g., as more nodes are added, more memory becomes available).
+So long as sub-grid size is kept constant (e.g., more ranks are added as problem size increases), the memory requirements of each rank will not increase as problem size increases.
+Additionally, because each sub-grid only communicates with a fixed number of neighbors (instead of communicating with all sub-grids), the memory required for communication overhead should scale in lockstep with available distributed memory as problem size increases and more ranks are added.
+
+For the largest grids we tested with $(8192 \times 8192)$, the channel configuration file was hundreds of megabytes large.
+Scaling even larger, simply reading channel configuration into memory or writing out resource accumulations for the entire grid might become intractable without parallel and distributed I/O.
+
+\subsection{Charm++ Implementation}
+
+\subsubsection{Work Division}
+
+In our implementation, each Charm++ Chare object represents a single grid tile.
+Each Chare engages in a self-update loop by means of a method in which it begins a resource-seed event, propagates a resource-wave signal to its neighbors (e.g., invokes a resource wave handling method on neighbor Chares), and then invokes the self-update method (which simply stores a message with instructions to run the self-update function in the Chare's queue).
+Resource-wave signals were prioritized over self-update calls in order to prevent accumulation of unhandled resource wave signals.
+
+Unfortunately, the Charm++ scheduler did not schedule Chare's very uniformly under these conditions (there were 100-1000x disparities between the number of self-updates accomplished by different Chares).
+To fix this issue, we had each Chare invoke the self-update method of a neighbor so that updates cycled through the collection of tile Chares in a round-robin fashion.
+(Note that this strategy isn't serial because at one time there is a number of active update signals circling through the round-robin loop equal to the number of Chares present).
+Reported profiling results used this update strategy.
+
+Work division between available processors is achieved using Charm++'s runtime scheduler, which runs each Chares' message handling functions on available CPUs.
+Charm++'s scheduler's seems somewhat opaque and guarded from direct influence by the end-user.
+For example, there does not seem to be a way to declare interconnect topologies at compile time.
+Instead, Charm++ uses runtime communication metrics to dynamically reassign Chare objects to different CPUs (e.g., see \url{http://charm.cs.uiuc.edu/research/topology}).
+Charm++ also uses runtime of migration of Chare objects to perform dynamic load balancing.
+In essence, Charm++ moves Chare objects from overutilized CPUs to underutilized CPUs in order to assure that computational resources are exploited efficiently.
+A variety of load-balancing strategies are available (e.g., see \url{http://charm.cs.illinois.edu/manuals/html/charm++/7.html}), ranging from centralized greedy scheduling algorithms to decentralized neighbor-swapping algorithms.
+Runtime migration requires the end-user to implement serialization and de-serialization routines for Chare objects, which was not tackled in this implementation, so the reported results do not take advantage of Charm++'s dynamic topology mapping or load balancing.
+
+In addition to enabling runtime migration, better Charm++ performance might be attained by increasing the ratio of computation to communication.
+Instead of assigning an individual grid tile to each Chare, we might assign a larger sub-grid to each Chare, as we did with the MPI implementation.
+The presence of significant (instead of negligible) computation within each Chare's self-update method might allow for better latency hiding.
+
+\subsubsection{Input/Output}
+
+Input of channel configurations and output of resource accumulations was achieved very naively.
+The main Chare (the Charm++ analog to the main function) reads in the channel configuration for the entire grid at startup.
+Immediately following creation of the tile Chares, the main Chare tells each tile Chare its channel ID using a method invocation on the tile Chares.
+At the end of runtime, each tile Chare reports its resource accumulation back to the main Chare.
+Once the last Chare has reported its resource accumulation, the main Chare writes all resource accumulation values out to a CSV file.
+Unfortunately, this output scheme was incompatible with the round-robin update invocation scheme described above, so verification results are reported using the self-update invocation scheme instead.
+
+The naive input/output methodology used in our Charm++ implementation does not impact performance profiling because input/output and initialization time was not measured.
+If we were going to run the Charm++ code in production, however, more sophisticated I/O routines would be in order.
+A common Charm++ idiom appears to be use of built-in, optimized reductions to bring data in to a single I/O Chare, which then handles writing data to file.
+
+\subsubsection{Memory Usage}
+
+Using Charm++ Chares to represent individual grid tiles might lead to excessive memory use when simulating a large grid on a small number of CPUs.
+As grid size increases, the memory overhead associated with Charm++'s Chare book-keeping and queued messages between Chares increases in lockstep.
+
+Charm++ employs a distributed memory model with individual Chares farmed out across nodes, so increasing the node count in tandem with increases in problem size should allow more grid tiles (and corresponding Chare objects) to be simulated without increasing the memory load on any individual node.
+However, the common Charm++ practice of piping I/O through a single Chare might prove problematic for large problem sizes if the amount of data that needs to be handled exceeds the memory available on a single node.
+
+An additional memory issue that can arise with Charm++ is accumulation of un-processed messages.
+For example, if the self-update messages (which generate resource-wave signal messages and then generate another self-update message) are consistently prioritized in the queue over resource-wave signal messages, a growing backlog of resource-wave signal messages will bloat memory and eventually crash the run.
+Prioritizing resource-wave signal messages over self-update messages mitigates this issue.
+
+\subsection{Compute Environment} \label{sec:compute}
+
+Performance experiments were performed on the Michigan State University High Performance Computing Center.
+Computing resources were requested using the following command: \texttt{salloc -n 256 --time=2:00:00}.
+This typically yielded a collection of processors spread across about 20 nodes (so, approximately 12 cores per node).
+Ideally, tests would have been performed using completely consistent compute configurations making use of entire nodes.
+To have enough resources allocated in a timely manner, however, experiments were performed using whatever resources the HPCC scheduler had available.
+However, for consistency's sake, all data part of a single analysis (e.g., presented on the same graph) were all generated using the same compute allocation.
+
+Performance estimates were obtained by running our codes for a fixed time period (150 seconds) and then measuring elapsed updates.
+Initialization and input/output activities were not included in the 150 seconds of clocked runtime.
+The Charm++ elapsed update count was estimated as the mean of elapsed updates across all tile Chare objects.
+
+Instructions to compile and run our code is provided in the \texttt{README.md} of the project code repository.
